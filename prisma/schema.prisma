@@ -1,0 +1,153 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  TUTOR
+  GUARDIAN
+  ADMIN
+}
+
+model User {
+  id              String   @id @default(cuid())
+  name            String
+  email           String   @unique
+  passwordHash    String
+  role            UserRole @default(TUTOR)
+  image           String?
+  phone           String?
+  isVerified      Boolean  @default(false)
+  emailVerifiedAt DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tutorProfile    TutorProfile?
+  postedJobs      Job[]            @relation("GuardianJobs")
+  applications    JobApplication[] @relation("TutorApplications")
+  reviewsReceived Review[]         @relation("ReviewsReceived")
+  reviewsGiven    Review[]         @relation("ReviewsGiven")
+  verificationDoc VerificationDocument?
+  
+  conversationsAsP1 Conversation[] @relation("ConversationParticipantOne")
+  conversationsAsP2 Conversation[] @relation("ConversationParticipantTwo")
+  messagesSent      Message[]
+}
+
+model TutorProfile {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bio            String?  @db.Text
+  subjects       String[] // Array of subjects
+  location       String?
+  hourlyRate     Float?
+  profileViews   Int      @default(0)
+  totalEarnings  Float    @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+enum JobStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model Job {
+  id             String           @id @default(cuid())
+  guardianId     String
+  guardian       User             @relation("GuardianJobs", fields: [guardianId], references: [id], onDelete: Cascade)
+  title          String
+  description    String           @db.Text
+  budget         Float?
+  location       String?
+  status         JobStatus        @default(OPEN)
+  applications   JobApplication[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+}
+
+enum ApplicationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model JobApplication {
+  id             String            @id @default(cuid())
+  jobId          String
+  job            Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  tutorId        String
+  tutor          User              @relation("TutorApplications", fields: [tutorId], references: [id], onDelete: Cascade)
+  coverLetter    String?           @db.Text
+  status         ApplicationStatus @default(PENDING)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@unique([jobId, tutorId])
+}
+
+model Review {
+  id             String   @id @default(cuid())
+  rating         Int      // e.g., 1 to 5
+  comment        String?  @db.Text
+  reviewerId     String
+  reviewer       User     @relation("ReviewsGiven", fields: [reviewerId], references: [id], onDelete: Cascade)
+  revieweeId     String
+  reviewee       User     @relation("ReviewsReceived", fields: [revieweeId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model VerificationDocument {
+  id            String             @id @default(cuid())
+  userId        String             @unique
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  idPhotoUrl    String             @db.Text
+  facePhotoUrl  String             @db.Text
+  aiRiskScore   Int                // 0-100 score, higher means higher risk of being fake
+  status        VerificationStatus @default(PENDING)
+  adminComments String?            @db.Text
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+}
+
+model Conversation {
+  id               String    @id @default(cuid())
+  participantOneId String
+  participantTwoId String
+  participantOne   User      @relation("ConversationParticipantOne", fields: [participantOneId], references: [id], onDelete: Cascade)
+  participantTwo   User      @relation("ConversationParticipantTwo", fields: [participantTwoId], references: [id], onDelete: Cascade)
+  
+  messages         Message[]
+  
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@unique([participantOneId, participantTwoId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  senderId       String
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  
+  content        String       @db.Text
+  isRead         Boolean      @default(false)
+  
+  createdAt      DateTime     @default(now())
+}
