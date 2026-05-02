@@ -8,4 +8,5 @@ messageRouter.use(requireAuth);
 
 messageRouter.get("/conversations", messageController.getMyConversations);
 messageRouter.post("/initiate", messageController.initiateConversation);
+messageRouter.post("/", messageController.sendMessage);
 messageRouter.get("/:id", messageController.getConversation);

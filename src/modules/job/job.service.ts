@@ -122,7 +122,7 @@ async function getTutorApplications(tutorId: string) {
       job: {
         include: {
           guardian: {
-            select: { name: true, image: true }
+            select: { id: true, name: true, image: true }
           }
         }
       }
