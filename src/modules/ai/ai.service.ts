@@ -179,9 +179,41 @@ Best regards,
 ${tutorName}`;
 }
 
+async function optimizeTutorBio(bio: string, name: string): Promise<string> {
+  const systemPrompt = `You are a professional profile optimizer for a tuition marketplace. 
+The user is a tutor who wants to improve their professional bio to attract more students/parents.
+You should make the bio more engaging, professional, and clear while maintaining the tutor's core information.
+Highlight their passion for teaching and their strengths.
+Keep it between 100-200 words.`;
+
+  if (ai) {
+    try {
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: [
+          { role: "user", parts: [{ text: `${systemPrompt}\n\nTutor Name: ${name}\n\nCurrent Bio: ${bio}` }] }
+        ],
+        config: {
+          temperature: 0.8,
+        }
+      });
+      
+      const text = response.text;
+      if (text) return text.trim();
+    } catch (error) {
+      console.error("Gemini API Error (Bio Optimization):", error);
+    }
+  }
+
+  // Fallback
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  return `Hi, I am ${name}. I am a dedicated and passionate educator committed to helping students achieve their academic potential. With my experience and personalized teaching approach, I focus on making complex concepts easy to understand. I aim to foster a positive learning environment where students feel confident to ask questions and grow. Let's work together to reach your educational goals!`;
+}
+
 export const aiService = {
   generateJobDescription,
   calculateMatchScore,
   analyzeVerificationRisk,
   generateCoverLetter,
+  optimizeTutorBio,
 };

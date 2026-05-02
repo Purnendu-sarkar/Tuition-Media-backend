@@ -70,7 +70,34 @@ async function generateCoverLetter(req: Request, res: Response, next: NextFuncti
   }
 }
 
+async function optimizeBio(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { bio } = req.body;
+    const userId = req.user?.sub;
+
+    if (!userId) {
+      return res.status(StatusCodes.UNAUTHORIZED).json({ message: "Unauthorized" });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { name: true }
+    });
+
+    if (!user) {
+      return res.status(StatusCodes.NOT_FOUND).json({ message: "User not found" });
+    }
+
+    const optimizedBio = await aiService.optimizeTutorBio(bio || "", user.name);
+    
+    res.status(StatusCodes.OK).json({ optimizedBio });
+  } catch (error) {
+    next(error);
+  }
+}
+
 export const aiController = {
   generateJob,
   generateCoverLetter,
+  optimizeBio,
 };
