@@ -6,7 +6,8 @@ import type { ApplyJobInput } from "./job.validation.js";
 
 async function getAllJobs(req: Request, res: Response, next: NextFunction) {
   try {
-    const jobs = await jobService.getAllOpenJobs();
+    const tutorId = req.user?.sub;
+    const jobs = await jobService.getAllOpenJobs(tutorId);
     res.status(StatusCodes.OK).json(jobs);
   } catch (error) {
     next(error);
@@ -62,9 +63,24 @@ async function getAppliedJobs(req: Request, res: Response, next: NextFunction) {
   }
 }
 
+async function getMyApplications(req: Request, res: Response, next: NextFunction) {
+  try {
+    const tutorId = req.user?.sub;
+    if (!tutorId) {
+      return res.status(StatusCodes.UNAUTHORIZED).json({ message: "Unauthorized" });
+    }
+
+    const applications = await jobService.getTutorApplications(tutorId);
+    res.status(StatusCodes.OK).json(applications);
+  } catch (error) {
+    next(error);
+  }
+}
+
 export const jobController = {
   getAllJobs,
   getJob,
   applyJob,
   getAppliedJobs,
+  getMyApplications,
 };

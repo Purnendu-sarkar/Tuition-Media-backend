@@ -1,7 +1,8 @@
 import { prisma } from "../../lib/prisma.js";
+import { aiService } from "../ai/ai.service.js";
 import type { ApplyJobInput } from "./job.validation.js";
 
-async function getAllOpenJobs() {
+async function getAllOpenJobs(tutorId?: string) {
   const jobs = await prisma.job.findMany({
     where: {
       status: "OPEN",
@@ -22,7 +23,22 @@ async function getAllOpenJobs() {
     },
   });
 
-  return jobs;
+  if (!tutorId) return jobs;
+
+  // Calculate match scores if tutorId is provided
+  const tutorProfile = await prisma.tutorProfile.findUnique({
+    where: { userId: tutorId },
+  });
+
+  if (!tutorProfile) return jobs;
+
+  return jobs.map(job => ({
+    ...job,
+    matchScore: aiService.calculateMatchScore(
+      { title: job.title, description: job.description, budget: job.budget },
+      { bio: tutorProfile.bio, subjects: tutorProfile.subjects, hourlyRate: tutorProfile.hourlyRate }
+    )
+  }));
 }
 
 async function getJobById(jobId: string) {
@@ -99,9 +115,26 @@ async function getAppliedJobsByTutor(tutorId: string) {
   return applications.map((app) => app.jobId);
 }
 
+async function getTutorApplications(tutorId: string) {
+  return prisma.jobApplication.findMany({
+    where: { tutorId },
+    include: {
+      job: {
+        include: {
+          guardian: {
+            select: { name: true, image: true }
+          }
+        }
+      }
+    },
+    orderBy: { createdAt: "desc" }
+  });
+}
+
 export const jobService = {
   getAllOpenJobs,
   getJobById,
   applyForJob,
   getAppliedJobsByTutor,
+  getTutorApplications,
 };
