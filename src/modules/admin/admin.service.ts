@@ -24,8 +24,14 @@ async function getPlatformStats() {
   };
 }
 
-async function getAllUsers() {
+async function getAllUsers(role?: string) {
+  const where: any = {};
+  if (role) {
+    where.role = role.toUpperCase();
+  }
+  
   return prisma.user.findMany({
+    where,
     select: {
       id: true,
       name: true,

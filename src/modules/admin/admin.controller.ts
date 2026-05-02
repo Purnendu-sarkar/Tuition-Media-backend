@@ -13,7 +13,8 @@ async function getStats(req: Request, res: Response, next: NextFunction) {
 
 async function getUsers(req: Request, res: Response, next: NextFunction) {
   try {
-    const users = await adminService.getAllUsers();
+    const role = req.query.role as string;
+    const users = await adminService.getAllUsers(role);
     res.status(StatusCodes.OK).json({ users });
   } catch (error) {
     next(error);
