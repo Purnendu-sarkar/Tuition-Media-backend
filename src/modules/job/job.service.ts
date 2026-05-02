@@ -86,8 +86,22 @@ async function applyForJob(tutorId: string, jobId: string, data: ApplyJobInput) 
   return application;
 }
 
+async function getAppliedJobsByTutor(tutorId: string) {
+  const applications = await prisma.jobApplication.findMany({
+    where: {
+      tutorId,
+    },
+    select: {
+      jobId: true,
+    },
+  });
+
+  return applications.map((app) => app.jobId);
+}
+
 export const jobService = {
   getAllOpenJobs,
   getJobById,
   applyForJob,
+  getAppliedJobsByTutor,
 };

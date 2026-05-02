@@ -125,8 +125,63 @@ export async function analyzeVerificationRisk(idPhotoUrl: string, facePhotoUrl: 
   return riskScore;
 }
 
+export async function generateCoverLetter(
+  jobTitle: string,
+  jobDescription: string,
+  tutorName: string,
+  tutorBio?: string
+): Promise<string> {
+  const systemPrompt = `You are a professional tutor application assistant. 
+The user (a tutor) wants to apply for a tuition job.
+You must generate a persuasive, professional, and personalized cover letter/message.
+The message should highlight the tutor's interest, relevant skills, and professionalism.
+Keep it concise but impactful (around 100-150 words).
+Use a polite tone suitable for addressing a guardian in Bangladesh.`;
+
+  const userPrompt = `Job Title: ${jobTitle}
+Job Description: ${jobDescription}
+Tutor Name: ${tutorName}
+Tutor Bio: ${tutorBio || "Highly motivated tutor with experience in multiple subjects."}
+
+Please write a great application message for this job.`;
+
+  if (ai) {
+    try {
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: [
+          { role: "user", parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }] }
+        ],
+        config: {
+          temperature: 0.8,
+        }
+      });
+      
+      const text = response.text;
+      if (text) return text.trim();
+    } catch (error) {
+      console.error("Gemini API Error (Cover Letter):", error);
+    }
+  }
+
+  // Fallback
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  
+  return `Dear Guardian,
+
+I am ${tutorName}, and I am very interested in your tuition post for "${jobTitle}". 
+
+Based on your requirements, I believe I can help the student achieve their academic goals. I have experience in similar roles and I am dedicated to providing high-quality education with patience and clarity.
+
+I would love to discuss how I can assist you further. Thank you for considering my application.
+
+Best regards,
+${tutorName}`;
+}
+
 export const aiService = {
   generateJobDescription,
   calculateMatchScore,
   analyzeVerificationRisk,
+  generateCoverLetter,
 };

@@ -11,6 +11,7 @@ export const jobRouter = Router();
 // Wait, for now let's just make it accessible to everyone or requireAuth?
 // Tutors need to be authenticated to apply. Let's make view open to all (or just auth)
 jobRouter.get("/", jobController.getAllJobs);
+jobRouter.get("/applied", requireAuth, jobController.getAppliedJobs);
 jobRouter.get("/:id", jobController.getJob);
 
 // Require auth and validation for applying

@@ -9,3 +9,4 @@ export const aiRouter = Router();
 aiRouter.use(requireAuth);
 
 aiRouter.post("/generate-job", aiController.generateJob);
+aiRouter.post("/generate-cover-letter", aiController.generateCoverLetter);

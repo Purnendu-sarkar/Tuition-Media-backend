@@ -47,8 +47,24 @@ async function applyJob(req: Request, res: Response, next: NextFunction) {
   }
 }
 
+async function getAppliedJobs(req: Request, res: Response, next: NextFunction) {
+  try {
+    const tutorId = req.user?.sub;
+    
+    if (!tutorId) {
+      return res.status(StatusCodes.UNAUTHORIZED).json({ message: "Unauthorized" });
+    }
+
+    const jobIds = await jobService.getAppliedJobsByTutor(tutorId);
+    res.status(StatusCodes.OK).json(jobIds);
+  } catch (error) {
+    next(error);
+  }
+}
+
 export const jobController = {
   getAllJobs,
   getJob,
   applyJob,
+  getAppliedJobs,
 };
