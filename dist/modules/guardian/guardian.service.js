@@ -136,9 +136,31 @@ async function updateApplicationStatus(guardianId, applicationId, data) {
     }
     return updatedApplication;
 }
+async function getAllJobs(guardianId) {
+    const jobs = await prisma.job.findMany({
+        where: { guardianId },
+        orderBy: { createdAt: "desc" },
+        include: {
+            _count: {
+                select: { applications: true },
+            },
+        },
+    });
+    return jobs.map(job => ({
+        id: job.id,
+        title: job.title,
+        budget: job.budget,
+        status: job.status,
+        location: job.location,
+        description: job.description,
+        applicantsCount: job._count.applications,
+        createdAt: job.createdAt,
+    }));
+}
 export const guardianService = {
     getDashboardStats,
     createJob,
+    getAllJobs,
     getJobApplications,
     updateApplicationStatus,
 };

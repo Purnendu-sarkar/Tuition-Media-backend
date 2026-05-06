@@ -5,3 +5,5 @@ export const aiRouter = Router();
 // Protect AI routes
 aiRouter.use(requireAuth);
 aiRouter.post("/generate-job", aiController.generateJob);
+aiRouter.post("/generate-cover-letter", aiController.generateCoverLetter);
+aiRouter.post("/optimize-bio", aiController.optimizeBio);

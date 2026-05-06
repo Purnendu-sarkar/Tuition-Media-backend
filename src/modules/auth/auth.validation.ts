@@ -18,3 +18,12 @@ export const signInSchema = z.object({
   email: z.string().trim().email("Provide a valid email address."),
   password: z.string().min(8, "Password must be at least 8 characters long."),
 });
+
+export const sendOtpSchema = z.object({
+  email: z.string().trim().email("Provide a valid email address."),
+});
+
+export const verifyOtpSchema = z.object({
+  email: z.string().trim().email("Provide a valid email address."),
+  code: z.string().length(6, "OTP must be 6 digits."),
+});

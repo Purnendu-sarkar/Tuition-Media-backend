@@ -35,8 +35,23 @@ async function initiateConversation(req, res, next) {
         next(error);
     }
 }
+async function sendMessage(req, res, next) {
+    try {
+        const userId = req.user.sub;
+        const { conversationId, content } = req.body;
+        if (!conversationId || !content) {
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: "conversationId and content are required" });
+        }
+        const message = await messageService.sendMessage(conversationId, userId, content);
+        res.status(StatusCodes.CREATED).json({ message });
+    }
+    catch (error) {
+        next(error);
+    }
+}
 export const messageController = {
     getMyConversations,
     getConversation,
-    initiateConversation
+    initiateConversation,
+    sendMessage
 };

@@ -114,12 +114,16 @@ model VerificationDocument {
   id            String             @id @default(cuid())
   userId        String             @unique
   user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  idPhotoUrl    String             @db.Text
-  facePhotoUrl  String             @db.Text
-  aiRiskScore   Int                // 0-100 score, higher means higher risk of being fake
-  status        VerificationStatus @default(PENDING)
-  adminComments String?            @db.Text
-  createdAt     DateTime           @default(now())
+  idPhotoUrl        String             @db.Text
+  facePhotoUrl      String             @db.Text
+  ipAddress         String?
+  deviceFingerprint String?
+  extractedData     Json?
+  ocrConfidence     Float?
+  aiRiskScore       Int                // 0-100 score, higher means higher risk of being fake
+  status            VerificationStatus @default(PENDING)
+  adminComments     String?            @db.Text
+  createdAt         DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
 }
 
@@ -150,4 +154,12 @@ model Message {
   isRead         Boolean      @default(false)
   
   createdAt      DateTime     @default(now())
+}
+
+model OtpCode {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  code      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }

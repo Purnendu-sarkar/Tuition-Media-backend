@@ -2,8 +2,10 @@ import { z } from "zod";
 
 export const submitVerificationSchema = z.object({
   body: z.object({
-    idPhotoUrl: z.string().url("Valid ID Photo URL is required"),
-    facePhotoUrl: z.string().url("Valid Face Photo URL is required"),
+    idPhotoUrl: z.string().optional(),
+    facePhotoUrl: z.string().optional(),
+    ipAddress: z.string().optional(),
+    deviceFingerprint: z.string().optional(),
   }),
 });
 

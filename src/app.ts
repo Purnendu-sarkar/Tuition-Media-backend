@@ -1,3 +1,4 @@
+import path from "path";
 import cors from "cors";
 import express from "express";
 import helmet from "helmet";
@@ -10,6 +11,8 @@ import { apiRouter } from "./routes/index.js";
 
 export function createApp() {
   const app = express();
+
+  app.use("/uploads", express.static(path.join(process.cwd(), "public/uploads")));
 
   app.use(
     cors({

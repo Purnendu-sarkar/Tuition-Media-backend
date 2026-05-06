@@ -2,7 +2,8 @@ import { StatusCodes } from "http-status-codes";
 import { jobService } from "./job.service.js";
 async function getAllJobs(req, res, next) {
     try {
-        const jobs = await jobService.getAllOpenJobs();
+        const tutorId = req.user?.sub;
+        const jobs = await jobService.getAllOpenJobs(tutorId);
         res.status(StatusCodes.OK).json(jobs);
     }
     catch (error) {
@@ -39,8 +40,36 @@ async function applyJob(req, res, next) {
         next(error);
     }
 }
+async function getAppliedJobs(req, res, next) {
+    try {
+        const tutorId = req.user?.sub;
+        if (!tutorId) {
+            return res.status(StatusCodes.UNAUTHORIZED).json({ message: "Unauthorized" });
+        }
+        const jobIds = await jobService.getAppliedJobsByTutor(tutorId);
+        res.status(StatusCodes.OK).json(jobIds);
+    }
+    catch (error) {
+        next(error);
+    }
+}
+async function getMyApplications(req, res, next) {
+    try {
+        const tutorId = req.user?.sub;
+        if (!tutorId) {
+            return res.status(StatusCodes.UNAUTHORIZED).json({ message: "Unauthorized" });
+        }
+        const applications = await jobService.getTutorApplications(tutorId);
+        res.status(StatusCodes.OK).json(applications);
+    }
+    catch (error) {
+        next(error);
+    }
+}
 export const jobController = {
     getAllJobs,
     getJob,
     applyJob,
+    getAppliedJobs,
+    getMyApplications,
 };

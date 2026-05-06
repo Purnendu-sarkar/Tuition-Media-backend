@@ -62,9 +62,23 @@ async function updateApplication(req, res, next) {
         next(error);
     }
 }
+async function getAllJobs(req, res, next) {
+    try {
+        const guardianId = req.user?.sub;
+        if (!guardianId) {
+            return res.status(StatusCodes.UNAUTHORIZED).json({ message: "Unauthorized" });
+        }
+        const jobs = await guardianService.getAllJobs(guardianId);
+        res.status(StatusCodes.OK).json(jobs);
+    }
+    catch (error) {
+        next(error);
+    }
+}
 export const guardianController = {
     getDashboard,
     createJob,
+    getAllJobs,
     getApplications,
     updateApplication,
 };

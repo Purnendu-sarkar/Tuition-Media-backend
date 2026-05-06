@@ -7,6 +7,7 @@ export const guardianRouter = Router();
 // Protect all guardian routes
 guardianRouter.use(requireAuth);
 guardianRouter.get("/dashboard", guardianController.getDashboard);
+guardianRouter.get("/jobs", guardianController.getAllJobs);
 guardianRouter.post("/jobs", validateRequest(createJobSchema), guardianController.createJob);
 guardianRouter.get("/jobs/:jobId/applications", guardianController.getApplications);
 guardianRouter.patch("/applications/:applicationId/status", validateRequest(updateApplicationSchema), guardianController.updateApplication);

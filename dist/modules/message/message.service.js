@@ -73,8 +73,32 @@ async function getOrCreateConversation(userId, targetUserId) {
     }
     return conv;
 }
+async function sendMessage(conversationId, senderId, content) {
+    const conversation = await prisma.conversation.findUnique({
+        where: { id: conversationId }
+    });
+    if (!conversation || (conversation.participantOneId !== senderId && conversation.participantTwoId !== senderId)) {
+        throw new Error("Conversation not found or unauthorized");
+    }
+    const message = await prisma.message.create({
+        data: {
+            conversationId,
+            senderId,
+            content,
+        },
+        include: {
+            sender: { select: { id: true, name: true, image: true } }
+        }
+    });
+    await prisma.conversation.update({
+        where: { id: conversationId },
+        data: { updatedAt: new Date() }
+    });
+    return message;
+}
 export const messageService = {
     getMyConversations,
     getConversation,
-    getOrCreateConversation
+    getOrCreateConversation,
+    sendMessage
 };

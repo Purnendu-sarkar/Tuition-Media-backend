@@ -2,7 +2,7 @@ import { prisma } from "../../lib/prisma.js";
 import { aiService } from "../ai/ai.service.js";
 import type { SubmitVerificationInput, ReviewVerificationInput } from "./verification.validation.js";
 
-async function submitVerification(userId: string, data: SubmitVerificationInput) {
+async function submitVerification(userId: string, data: SubmitVerificationInput & { idLocalPath?: string; faceLocalPath?: string }) {
   // Check if a document already exists and is pending or approved
   const existing = await prisma.verificationDocument.findUnique({
     where: { userId }
@@ -17,8 +17,12 @@ async function submitVerification(userId: string, data: SubmitVerificationInput)
     }
   }
 
-  // Generate AI Risk Score (mock OCR & Face matching)
-  const riskScore = await aiService.analyzeVerificationRisk(data.idPhotoUrl, data.facePhotoUrl);
+  // Generate AI Risk Score and OCR data
+  // Use local path for OCR if available, otherwise fallback to URL
+  const aiAnalysis = await aiService.analyzeVerificationRisk(
+    data.idLocalPath || data.idPhotoUrl || "", 
+    data.faceLocalPath || data.facePhotoUrl || ""
+  );
 
   // Store in DB
   const doc = await prisma.verificationDocument.upsert({
@@ -26,7 +30,11 @@ async function submitVerification(userId: string, data: SubmitVerificationInput)
     update: {
       idPhotoUrl: data.idPhotoUrl,
       facePhotoUrl: data.facePhotoUrl,
-      aiRiskScore: riskScore,
+      ipAddress: data.ipAddress,
+      deviceFingerprint: data.deviceFingerprint,
+      aiRiskScore: aiAnalysis.riskScore,
+      extractedData: aiAnalysis.extractedData || undefined,
+      ocrConfidence: aiAnalysis.ocrConfidence,
       status: "PENDING",
       adminComments: null,
     },
@@ -34,7 +42,11 @@ async function submitVerification(userId: string, data: SubmitVerificationInput)
       userId,
       idPhotoUrl: data.idPhotoUrl,
       facePhotoUrl: data.facePhotoUrl,
-      aiRiskScore: riskScore,
+      ipAddress: data.ipAddress,
+      deviceFingerprint: data.deviceFingerprint,
+      aiRiskScore: aiAnalysis.riskScore,
+      extractedData: aiAnalysis.extractedData || undefined,
+      ocrConfidence: aiAnalysis.ocrConfidence,
       status: "PENDING",
     }
   });

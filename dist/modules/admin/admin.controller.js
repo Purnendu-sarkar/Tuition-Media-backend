@@ -11,7 +11,8 @@ async function getStats(req, res, next) {
 }
 async function getUsers(req, res, next) {
     try {
-        const users = await adminService.getAllUsers();
+        const role = req.query.role;
+        const users = await adminService.getAllUsers(role);
         res.status(StatusCodes.OK).json({ users });
     }
     catch (error) {

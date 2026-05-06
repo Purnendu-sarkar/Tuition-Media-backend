@@ -113,8 +113,84 @@ export async function analyzeVerificationRisk(idPhotoUrl, facePhotoUrl) {
     const riskScore = Math.floor(Math.random() * 40) + 5;
     return riskScore;
 }
+export async function generateCoverLetter(jobTitle, jobDescription, tutorName, tutorBio) {
+    const systemPrompt = `You are a professional tutor application assistant. 
+The user (a tutor) wants to apply for a tuition job.
+You must generate a persuasive, professional, and personalized cover letter/message.
+The message should highlight the tutor's interest, relevant skills, and professionalism.
+Keep it concise but impactful (around 100-150 words).
+Use a polite tone suitable for addressing a guardian in Bangladesh.`;
+    const userPrompt = `Job Title: ${jobTitle}
+Job Description: ${jobDescription}
+Tutor Name: ${tutorName}
+Tutor Bio: ${tutorBio || "Highly motivated tutor with experience in multiple subjects."}
+
+Please write a great application message for this job.`;
+    if (ai) {
+        try {
+            const response = await ai.models.generateContent({
+                model: "gemini-2.5-flash",
+                contents: [
+                    { role: "user", parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }] }
+                ],
+                config: {
+                    temperature: 0.8,
+                }
+            });
+            const text = response.text;
+            if (text)
+                return text.trim();
+        }
+        catch (error) {
+            console.error("Gemini API Error (Cover Letter):", error);
+        }
+    }
+    // Fallback
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    return `Dear Guardian,
+
+I am ${tutorName}, and I am very interested in your tuition post for "${jobTitle}". 
+
+Based on your requirements, I believe I can help the student achieve their academic goals. I have experience in similar roles and I am dedicated to providing high-quality education with patience and clarity.
+
+I would love to discuss how I can assist you further. Thank you for considering my application.
+
+Best regards,
+${tutorName}`;
+}
+async function optimizeTutorBio(bio, name) {
+    const systemPrompt = `You are a professional profile optimizer for a tuition marketplace. 
+The user is a tutor who wants to improve their professional bio to attract more students/parents.
+You should make the bio more engaging, professional, and clear while maintaining the tutor's core information.
+Highlight their passion for teaching and their strengths.
+Keep it between 100-200 words.`;
+    if (ai) {
+        try {
+            const response = await ai.models.generateContent({
+                model: "gemini-2.5-flash",
+                contents: [
+                    { role: "user", parts: [{ text: `${systemPrompt}\n\nTutor Name: ${name}\n\nCurrent Bio: ${bio}` }] }
+                ],
+                config: {
+                    temperature: 0.8,
+                }
+            });
+            const text = response.text;
+            if (text)
+                return text.trim();
+        }
+        catch (error) {
+            console.error("Gemini API Error (Bio Optimization):", error);
+        }
+    }
+    // Fallback
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    return `Hi, I am ${name}. I am a dedicated and passionate educator committed to helping students achieve their academic potential. With my experience and personalized teaching approach, I focus on making complex concepts easy to understand. I aim to foster a positive learning environment where students feel confident to ask questions and grow. Let's work together to reach your educational goals!`;
+}
 export const aiService = {
     generateJobDescription,
     calculateMatchScore,
     analyzeVerificationRisk,
+    generateCoverLetter,
+    optimizeTutorBio,
 };
