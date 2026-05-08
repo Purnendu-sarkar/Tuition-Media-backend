@@ -1,5 +1,7 @@
+import { StatusCodes } from "http-status-codes";
 import { prisma } from "../../lib/prisma.js";
 import { sendEmail } from "../../lib/email.js";
+import { AppError } from "../../lib/app-error.js";
 import otpGenerator from "otp-generator";
 async function sendOtp(email) {
     // Generate a 6-digit numeric OTP
@@ -25,13 +27,13 @@ async function verifyOtp(email, code) {
         where: { email: email.toLowerCase() },
     });
     if (!otpRecord) {
-        throw new Error("OTP not found");
+        throw new AppError(StatusCodes.NOT_FOUND, "OTP not found");
     }
     if (otpRecord.code !== code) {
-        throw new Error("Invalid OTP");
+        throw new AppError(StatusCodes.BAD_REQUEST, "Invalid OTP");
     }
     if (otpRecord.expiresAt < new Date()) {
-        throw new Error("OTP has expired");
+        throw new AppError(StatusCodes.BAD_REQUEST, "OTP has expired");
     }
     // Delete after successful verification
     await prisma.otpCode.delete({

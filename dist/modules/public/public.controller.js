@@ -2,11 +2,12 @@ import { StatusCodes } from "http-status-codes";
 import { prisma } from "../../lib/prisma.js";
 async function getTutors(req, res, next) {
     try {
-        const { subject, location, minRate, maxRate, query, page = 1, limit = 10 } = req.query;
+        const { subject, location, minRate, maxRate, query, isVerified, page = 1, limit = 10 } = req.query;
         const skip = (Number(page) - 1) * Number(limit);
         const take = Number(limit);
         const where = {
             role: "TUTOR",
+            isVerified: isVerified === "false" ? undefined : true,
             tutorProfile: {
                 isNot: null,
             },
@@ -71,10 +72,21 @@ async function getTutors(req, res, next) {
             const avgRating = tutor.reviewsReceived.length > 0
                 ? tutor.reviewsReceived.reduce((acc, curr) => acc + curr.rating, 0) / tutor.reviewsReceived.length
                 : 0;
+            const totalReviews = tutor.reviewsReceived.length;
+            const averageRating = Number(avgRating.toFixed(1));
+            // Smart Badge Logic
+            const badges = [];
+            if (tutor.isVerified)
+                badges.push({ id: "verified", label: "AI Verified", color: "blue" });
+            if (averageRating >= 4.5 && totalReviews >= 1)
+                badges.push({ id: "highly-rated", label: "Highly Rated", color: "gold" });
+            if (tutor.tutorProfile?.profileViews && tutor.tutorProfile.profileViews > 50)
+                badges.push({ id: "popular", label: "Popular", color: "purple" });
             return {
                 ...tutor,
-                averageRating: Number(avgRating.toFixed(1)),
-                totalReviews: tutor.reviewsReceived.length,
+                averageRating,
+                totalReviews,
+                badges,
             };
         });
         res.status(StatusCodes.OK).json({
@@ -110,6 +122,7 @@ async function getTutorById(req, res, next) {
                         subjects: true,
                         location: true,
                         hourlyRate: true,
+                        profileViews: true,
                     },
                 },
                 reviewsReceived: {
@@ -132,17 +145,29 @@ async function getTutorById(req, res, next) {
             return;
         }
         // Increment profile views
-        await prisma.tutorProfile.update({
+        await prisma.tutorProfile.upsert({
             where: { userId: tutorId },
-            data: { profileViews: { increment: 1 } },
+            update: { profileViews: { increment: 1 } },
+            create: { userId: tutorId, profileViews: 1 },
         });
         const avgRating = tutor.reviewsReceived.length > 0
             ? tutor.reviewsReceived.reduce((acc, curr) => acc + curr.rating, 0) / tutor.reviewsReceived.length
             : 0;
+        const averageRating = Number(avgRating.toFixed(1));
+        const totalReviews = tutor.reviewsReceived.length;
+        // Smart Badge Logic
+        const badges = [];
+        if (tutor.isVerified)
+            badges.push({ id: "verified", label: "AI Verified", color: "blue" });
+        if (averageRating >= 4.5 && totalReviews >= 1)
+            badges.push({ id: "highly-rated", label: "Highly Rated", color: "gold" });
+        if (tutor.tutorProfile?.profileViews && tutor.tutorProfile.profileViews > 50)
+            badges.push({ id: "popular", label: "Popular", color: "purple" });
         res.status(StatusCodes.OK).json({
             ...tutor,
-            averageRating: Number(avgRating.toFixed(1)),
-            totalReviews: tutor.reviewsReceived.length,
+            averageRating,
+            totalReviews,
+            badges,
         });
     }
     catch (error) {
