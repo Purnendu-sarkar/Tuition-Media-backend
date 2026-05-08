@@ -3,7 +3,25 @@ import { verificationService } from "./verification.service.js";
 async function submitVerification(req, res, next) {
     try {
         const userId = req.user.sub;
-        const doc = await verificationService.submitVerification(userId, req.body);
+        const files = req.files;
+        if (!files || !files.idPhoto || !files.facePhoto) {
+            res.status(StatusCodes.BAD_REQUEST).json({ message: "Both ID photo and face photo are required." });
+            return;
+        }
+        const protocol = req.protocol;
+        const host = req.get("host");
+        const baseUrl = `${protocol}://${host}`;
+        const idPhotoUrl = `${baseUrl}/uploads/${files.idPhoto[0].filename}`;
+        const facePhotoUrl = `${baseUrl}/uploads/${files.facePhoto[0].filename}`;
+        const idLocalPath = files.idPhoto[0].path;
+        const faceLocalPath = files.facePhoto[0].path;
+        const doc = await verificationService.submitVerification(userId, {
+            ...req.body,
+            idPhotoUrl,
+            facePhotoUrl,
+            idLocalPath,
+            faceLocalPath,
+        });
         res.status(StatusCodes.CREATED).json(doc);
     }
     catch (error) {

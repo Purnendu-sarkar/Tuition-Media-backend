@@ -28,8 +28,8 @@ async function submitVerification(userId: string, data: SubmitVerificationInput 
   const doc = await prisma.verificationDocument.upsert({
     where: { userId },
     update: {
-      idPhotoUrl: data.idPhotoUrl,
-      facePhotoUrl: data.facePhotoUrl,
+      idPhotoUrl: data.idPhotoUrl || "",
+      facePhotoUrl: data.facePhotoUrl || "",
       ipAddress: data.ipAddress,
       deviceFingerprint: data.deviceFingerprint,
       aiRiskScore: aiAnalysis.riskScore,
@@ -40,8 +40,8 @@ async function submitVerification(userId: string, data: SubmitVerificationInput 
     },
     create: {
       userId,
-      idPhotoUrl: data.idPhotoUrl,
-      facePhotoUrl: data.facePhotoUrl,
+      idPhotoUrl: data.idPhotoUrl || "",
+      facePhotoUrl: data.facePhotoUrl || "",
       ipAddress: data.ipAddress,
       deviceFingerprint: data.deviceFingerprint,
       aiRiskScore: aiAnalysis.riskScore,

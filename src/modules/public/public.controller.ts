@@ -84,8 +84,8 @@ async function getTutors(req: Request, res: Response, next: NextFunction) {
     ]);
 
     const tutorsWithRating = tutors.map((tutor) => {
-      const avgRating = tutor.reviewsReceived.length > 0
-        ? tutor.reviewsReceived.reduce((acc, curr) => acc + curr.rating, 0) / tutor.reviewsReceived.length
+      const avgRating = (tutor.reviewsReceived as any[]).length > 0
+        ? (tutor.reviewsReceived as any[]).reduce((acc: number, curr: any) => acc + curr.rating, 0) / tutor.reviewsReceived.length
         : 0;
       
       return {
@@ -112,9 +112,10 @@ async function getTutors(req: Request, res: Response, next: NextFunction) {
 async function getTutorById(req: Request, res: Response, next: NextFunction) {
   try {
     const { id } = req.params;
+    const tutorId = id as string;
 
     const tutor = await prisma.user.findUnique({
-      where: { id },
+      where: { id: tutorId },
       select: {
         id: true,
         name: true,
@@ -153,12 +154,12 @@ async function getTutorById(req: Request, res: Response, next: NextFunction) {
 
     // Increment profile views
     await prisma.tutorProfile.update({
-      where: { userId: id },
+      where: { userId: tutorId },
       data: { profileViews: { increment: 1 } },
     });
 
-    const avgRating = tutor.reviewsReceived.length > 0
-      ? tutor.reviewsReceived.reduce((acc, curr) => acc + curr.rating, 0) / tutor.reviewsReceived.length
+    const avgRating = (tutor.reviewsReceived as any[]).length > 0
+      ? (tutor.reviewsReceived as any[]).reduce((acc: number, curr: any) => acc + curr.rating, 0) / tutor.reviewsReceived.length
       : 0;
 
     res.status(StatusCodes.OK).json({

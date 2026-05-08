@@ -105,13 +105,34 @@ export function calculateMatchScore(job, tutor) {
     finalScore = Math.max(45, Math.min(98, finalScore));
     return Math.round(finalScore);
 }
+import Tesseract from 'tesseract.js';
 export async function analyzeVerificationRisk(idPhotoUrl, facePhotoUrl) {
-    // Mock AI response representing OCR + Face Matching confidence
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    // Random score between 5 and 45 for testing,
-    // indicating "low to medium risk" by default for easy approval testing.
-    const riskScore = Math.floor(Math.random() * 40) + 5;
-    return riskScore;
+    let extractedData = null;
+    let ocrConfidence = 0;
+    let riskScore = 50;
+    try {
+        // If the URL is external, Tesseract can fetch it. If it's local base64, it handles it too.
+        const result = await Tesseract.recognize(idPhotoUrl, 'eng');
+        extractedData = { text: result.data.text };
+        ocrConfidence = result.data.confidence;
+        // basic heuristic logic for OCR
+        if (ocrConfidence > 80) {
+            riskScore -= 20;
+        }
+        else if (ocrConfidence < 50) {
+            riskScore += 20;
+        }
+        // mock face matching score deduction (simulating that faces matched)
+        riskScore -= 10;
+        // Random variations based on simulated behavior
+        riskScore += Math.floor(Math.random() * 10) - 5;
+        riskScore = Math.max(0, Math.min(100, riskScore));
+    }
+    catch (err) {
+        console.error("OCR or Face matching failed", err);
+        riskScore = 80; // High risk if analysis fails
+    }
+    return { riskScore, extractedData, ocrConfidence };
 }
 export async function generateCoverLetter(jobTitle, jobDescription, tutorName, tutorBio) {
     const systemPrompt = `You are a professional tutor application assistant. 

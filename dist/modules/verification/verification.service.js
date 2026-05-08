@@ -13,23 +13,32 @@ async function submitVerification(userId, data) {
             throw new Error("Your verification is already under review.");
         }
     }
-    // Generate AI Risk Score (mock OCR & Face matching)
-    const riskScore = await aiService.analyzeVerificationRisk(data.idPhotoUrl, data.facePhotoUrl);
+    // Generate AI Risk Score and OCR data
+    // Use local path for OCR if available, otherwise fallback to URL
+    const aiAnalysis = await aiService.analyzeVerificationRisk(data.idLocalPath || data.idPhotoUrl || "", data.faceLocalPath || data.facePhotoUrl || "");
     // Store in DB
     const doc = await prisma.verificationDocument.upsert({
         where: { userId },
         update: {
-            idPhotoUrl: data.idPhotoUrl,
-            facePhotoUrl: data.facePhotoUrl,
-            aiRiskScore: riskScore,
+            idPhotoUrl: data.idPhotoUrl || "",
+            facePhotoUrl: data.facePhotoUrl || "",
+            ipAddress: data.ipAddress,
+            deviceFingerprint: data.deviceFingerprint,
+            aiRiskScore: aiAnalysis.riskScore,
+            extractedData: aiAnalysis.extractedData || undefined,
+            ocrConfidence: aiAnalysis.ocrConfidence,
             status: "PENDING",
             adminComments: null,
         },
         create: {
             userId,
-            idPhotoUrl: data.idPhotoUrl,
-            facePhotoUrl: data.facePhotoUrl,
-            aiRiskScore: riskScore,
+            idPhotoUrl: data.idPhotoUrl || "",
+            facePhotoUrl: data.facePhotoUrl || "",
+            ipAddress: data.ipAddress,
+            deviceFingerprint: data.deviceFingerprint,
+            aiRiskScore: aiAnalysis.riskScore,
+            extractedData: aiAnalysis.extractedData || undefined,
+            ocrConfidence: aiAnalysis.ocrConfidence,
             status: "PENDING",
         }
     });

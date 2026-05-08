@@ -64,6 +64,11 @@ async function getDashboardStats(tutorId) {
         completenessScore += 20;
     else
         missingSteps.push("Set your hourly rate");
+    // Get verification status
+    const verification = await prisma.verificationDocument.findUnique({
+        where: { userId: tutorId },
+        select: { status: true }
+    });
     return {
         stats: {
             activeApplications: activeApplicationsCount,
@@ -80,6 +85,7 @@ async function getDashboardStats(tutorId) {
         })),
         profileStatus: {
             isVerified: user.isVerified,
+            verificationStatus: verification?.status || null,
             isProfileComplete: completenessScore === 100,
             completenessScore,
             missingSteps,
