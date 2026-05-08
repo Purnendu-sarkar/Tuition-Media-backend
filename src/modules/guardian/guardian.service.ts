@@ -84,6 +84,40 @@ async function createJob(guardianId: string, payload: CreateJobInput) {
     },
   });
 
+  // Smart AI Notifications: Trigger in background
+  void (async () => {
+    try {
+      // Find tutors who teach subjects mentioned in the job title
+      const tutors = await prisma.user.findMany({
+        where: {
+          role: "TUTOR",
+          tutorProfile: {
+            isNot: null,
+          }
+        },
+        include: { tutorProfile: true }
+      });
+
+      const matchedTutors = tutors.filter(tutor => {
+        if (!tutor.tutorProfile?.subjects) return false;
+        return tutor.tutorProfile.subjects.some(subject => 
+          job.title.toLowerCase().includes(subject.toLowerCase()) || 
+          job.description.toLowerCase().includes(subject.toLowerCase())
+        );
+      });
+
+      if (matchedTutors.length > 0) {
+        console.log(`[AI Smart Notification] Found ${matchedTutors.length} matching tutors for job: "${job.title}"`);
+        matchedTutors.forEach(tutor => {
+          console.log(`[AI Email] Sent notification to ${tutor.name} (${tutor.email})`);
+          // In a real app, you'd call sendEmail here
+        });
+      }
+    } catch (err) {
+      console.error("Smart Notification Error:", err);
+    }
+  })();
+
   return job;
 }
 

@@ -208,10 +208,95 @@ Keep it between 100-200 words.`;
     await new Promise(resolve => setTimeout(resolve, 1500));
     return `Hi, I am ${name}. I am a dedicated and passionate educator committed to helping students achieve their academic potential. With my experience and personalized teaching approach, I focus on making complex concepts easy to understand. I aim to foster a positive learning environment where students feel confident to ask questions and grow. Let's work together to reach your educational goals!`;
 }
+async function generateInterviewQuestions(subject) {
+    const systemPrompt = `You are an expert interviewer for a prestigious tuition agency. 
+The user is a tutor who wants to prepare for an interview in the subject of "${subject}".
+Generate 5-7 challenging and relevant interview questions that test both subject knowledge and teaching methodology.
+Return the questions as a JSON array of strings.
+Return ONLY valid JSON.`;
+    if (ai) {
+        try {
+            const response = await ai.models.generateContent({
+                model: "gemini-2.5-flash",
+                contents: [
+                    { role: "user", parts: [{ text: systemPrompt }] }
+                ],
+                config: {
+                    temperature: 0.8,
+                    responseMimeType: "application/json",
+                }
+            });
+            const text = response.text;
+            if (text) {
+                return JSON.parse(text);
+            }
+        }
+        catch (error) {
+            console.error("Gemini API Error (Interview Questions):", error);
+        }
+    }
+    // Fallback
+    return [
+        `How do you explain complex concepts in ${subject} to a beginner student?`,
+        `What are your strategies for managing a difficult student who lacks motivation in ${subject}?`,
+        `Can you describe a specific ${subject} topic and how you would teach it in 5 minutes?`,
+        `How do you assess if a student has truly understood a lesson in ${subject}?`,
+        `How do you stay updated with the latest curriculum changes in ${subject}?`
+    ];
+}
+async function generateTeachingGuide(subject) {
+    const systemPrompt = `You are a master educator mentor. 
+Generate a comprehensive, encouraging teaching guide/tips for a tutor teaching "${subject}".
+Include:
+1. Core concepts to focus on.
+2. Common student difficulties and how to overcome them.
+3. Creative teaching methods for this subject.
+4. Recommended tools or resources.
+Keep it professional and around 300-500 words. Format with clear headings and bullet points.`;
+    if (ai) {
+        try {
+            const response = await ai.models.generateContent({
+                model: "gemini-2.5-flash",
+                contents: [
+                    { role: "user", parts: [{ text: systemPrompt }] }
+                ],
+                config: {
+                    temperature: 0.7,
+                }
+            });
+            const text = response.text;
+            if (text)
+                return text.trim();
+        }
+        catch (error) {
+            console.error("Gemini API Error (Teaching Guide):", error);
+        }
+    }
+    // Fallback
+    return `# Teaching Guide for ${subject}
+  
+## Core Concepts
+Focus on building strong foundational knowledge. Ensure the student understands "why" before "how".
+
+## Common Difficulties
+Many students struggle with abstract concepts. Use real-life analogies to make them concrete.
+
+## Creative Teaching Methods
+• Use visual aids and interactive diagrams.
+• Implement "Active Recall" by asking the student to teach the concept back to you.
+• Break down large problems into smaller, manageable steps.
+
+## Recommended Tips
+• Be patient and encourage questions.
+• Set small, achievable weekly goals.
+• Celebrate progress to keep the student motivated.`;
+}
 export const aiService = {
     generateJobDescription,
     calculateMatchScore,
     analyzeVerificationRisk,
     generateCoverLetter,
     optimizeTutorBio,
+    generateInterviewQuestions,
+    generateTeachingGuide,
 };

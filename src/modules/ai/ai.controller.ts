@@ -96,8 +96,34 @@ async function optimizeBio(req: Request, res: Response, next: NextFunction) {
   }
 }
 
+async function generateInterview(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { subject } = req.body;
+    if (!subject) return res.status(StatusCodes.BAD_REQUEST).json({ message: "Subject is required" });
+
+    const questions = await aiService.generateInterviewQuestions(subject);
+    res.status(StatusCodes.OK).json({ questions });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function generateResources(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { subject } = req.body;
+    if (!subject) return res.status(StatusCodes.BAD_REQUEST).json({ message: "Subject is required" });
+
+    const guide = await aiService.generateTeachingGuide(subject);
+    res.status(StatusCodes.OK).json({ guide });
+  } catch (error) {
+    next(error);
+  }
+}
+
 export const aiController = {
   generateJob,
   generateCoverLetter,
   optimizeBio,
+  generateInterview,
+  generateResources,
 };
