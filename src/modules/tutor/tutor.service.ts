@@ -58,6 +58,12 @@ async function getDashboardStats(tutorId: string) {
   if (profile?.location) completenessScore += 20; else missingSteps.push("Set your teaching location");
   if (profile?.hourlyRate) completenessScore += 20; else missingSteps.push("Set your hourly rate");
 
+  // Get verification status
+  const verification = await prisma.verificationDocument.findUnique({
+    where: { userId: tutorId },
+    select: { status: true }
+  });
+
   return {
     stats: {
       activeApplications: activeApplicationsCount,
@@ -74,6 +80,7 @@ async function getDashboardStats(tutorId: string) {
     })),
     profileStatus: {
       isVerified: user.isVerified,
+      verificationStatus: verification?.status || null,
       isProfileComplete: completenessScore === 100,
       completenessScore,
       missingSteps,

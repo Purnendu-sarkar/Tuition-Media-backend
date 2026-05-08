@@ -48,11 +48,19 @@ async function getDashboardStats(guardianId: string) {
     },
   });
 
+  // Get verification status
+  const verification = await prisma.verificationDocument.findUnique({
+    where: { userId: guardianId },
+    select: { status: true }
+  });
+
   return {
     stats: {
       totalPostedJobs,
       activeJobs,
       totalApplicants,
+      isVerified: user.isVerified,
+      verificationStatus: verification?.status || null
     },
     recentJobs: recentJobs.map(job => ({
       id: job.id,
