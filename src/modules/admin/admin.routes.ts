@@ -14,3 +14,10 @@ adminRouter.get("/users", adminController.getUsers);
 adminRouter.delete("/users/:id", adminController.deleteUser);
 adminRouter.get("/jobs", adminController.getJobs);
 adminRouter.delete("/jobs/:id", adminController.deleteJob);
+
+// Support & Moderation
+adminRouter.get("/reports", adminController.getReports);
+adminRouter.patch("/reports/:id", adminController.updateReportStatus);
+adminRouter.get("/tickets", adminController.getTickets);
+adminRouter.patch("/tickets/:id", adminController.updateTicketStatus);
+adminRouter.post("/tickets/:id/messages", adminController.addTicketMessage);

@@ -11,6 +11,7 @@ import { adminRouter } from "../modules/admin/admin.routes.js";
 import { messageRouter } from "../modules/message/message.routes.js";
 import { publicRouter } from "../modules/public/public.routes.js";
 import reviewRouter from "../modules/review/review.router.js";
+import { supportRouter } from "../modules/support/support.routes.js";
 
 export const apiRouter = Router();
 
@@ -25,3 +26,4 @@ apiRouter.use("/verification", verificationRouter);
 apiRouter.use("/admin", adminRouter);
 apiRouter.use("/messages", messageRouter);
 apiRouter.use("/reviews", reviewRouter);
+apiRouter.use("/support", supportRouter);

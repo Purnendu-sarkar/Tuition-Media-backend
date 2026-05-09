@@ -36,6 +36,9 @@ model User {
   conversationsAsP1 Conversation[] @relation("ConversationParticipantOne")
   conversationsAsP2 Conversation[] @relation("ConversationParticipantTwo")
   messagesSent      Message[]
+  reportsSubmitted  Report[]       @relation("ReportsSubmitted")
+  reportsReceived   Report[]       @relation("ReportsReceived")
+  supportTickets    SupportTicket[]
 }
 
 model TutorProfile {
@@ -165,4 +168,61 @@ model OtpCode {
   code      String
   expiresAt DateTime
   createdAt DateTime @default(now())
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWING
+  RESOLVED
+  DISMISSED
+}
+
+model Report {
+  id          String       @id @default(cuid())
+  reporterId  String
+  reporter    User         @relation("ReportsSubmitted", fields: [reporterId], references: [id], onDelete: Cascade)
+  reportedId  String?
+  reported    User?        @relation("ReportsReceived", fields: [reportedId], references: [id], onDelete: Cascade)
+  reason      String
+  description String       @db.Text
+  status      ReportStatus @default(PENDING)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  CLOSED
+}
+
+model SupportTicket {
+  id          String          @id @default(cuid())
+  userId      String
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject     String
+  description String          @db.Text
+  status      TicketStatus    @default(OPEN)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  messages    TicketMessage[]
+}
+
+model TicketMessage {
+  id        String        @id @default(cuid())
+  ticketId  String
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  senderId  String        // User ID or 'ADMIN'/'SYSTEM'
+  content   String        @db.Text
+  isAdmin   Boolean       @default(false)
+  createdAt DateTime      @default(now())
+}
+
+model FAQ {
+  id        String   @id @default(cuid())
+  question  String
+  answer    String   @db.Text
+  category  String   @default("General")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

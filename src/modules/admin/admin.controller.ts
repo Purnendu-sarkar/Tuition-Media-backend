@@ -50,10 +50,69 @@ async function deleteJob(req: Request, res: Response, next: NextFunction) {
   }
 }
 
+// Support & Moderation
+async function getReports(req: Request, res: Response, next: NextFunction) {
+  try {
+    const reports = await adminService.getAllReports();
+    res.status(StatusCodes.OK).json({ reports });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function updateReportStatus(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const report = await adminService.updateReportStatus(id as string, status as any);
+    res.status(StatusCodes.OK).json({ report });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function getTickets(req: Request, res: Response, next: NextFunction) {
+  try {
+    const tickets = await adminService.getAllTickets();
+    res.status(StatusCodes.OK).json({ tickets });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function updateTicketStatus(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const ticket = await adminService.updateTicketStatus(id as string, status as any);
+    res.status(StatusCodes.OK).json({ ticket });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function addTicketMessage(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { id } = req.params;
+    const { content } = req.body;
+    // @ts-ignore
+    const adminId = req.user.sub;
+    const message = await adminService.addTicketMessage(id as string, adminId, content as string);
+    res.status(StatusCodes.CREATED).json({ message });
+  } catch (error) {
+    next(error);
+  }
+}
+
 export const adminController = {
   getStats,
   getUsers,
   deleteUser,
   getJobs,
   deleteJob,
+  getReports,
+  updateReportStatus,
+  getTickets,
+  updateTicketStatus,
+  addTicketMessage,
 };
