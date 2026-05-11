@@ -7,12 +7,26 @@ async function getPlatformStats() {
     totalGuardians,
     activeJobs,
     pendingVerifications,
+    totalReviews,
+    avgRatingData,
+    totalMessages,
+    approvedVerifications,
+    rejectedVerifications,
+    recentUsersCount,
+    recentJobsCount
   ] = await Promise.all([
     prisma.user.count(),
     prisma.user.count({ where: { role: "TUTOR" } }),
     prisma.user.count({ where: { role: "GUARDIAN" } }),
     prisma.job.count({ where: { status: "OPEN" } }),
     prisma.verificationDocument.count({ where: { status: "PENDING" } }),
+    prisma.review.count(),
+    prisma.review.aggregate({ _avg: { rating: true } }),
+    prisma.message.count(),
+    prisma.verificationDocument.count({ where: { status: "APPROVED" } }),
+    prisma.verificationDocument.count({ where: { status: "REJECTED" } }),
+    prisma.user.count({ where: { createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } } }),
+    prisma.job.count({ where: { createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } } }),
   ]);
 
   return {
@@ -21,6 +35,18 @@ async function getPlatformStats() {
     totalGuardians,
     activeJobs,
     pendingVerifications,
+    totalReviews,
+    averageRating: avgRatingData._avg.rating || 0,
+    totalMessages,
+    verificationStats: {
+      approved: approvedVerifications,
+      rejected: rejectedVerifications,
+      pending: pendingVerifications
+    },
+    growth: {
+      newUsers7d: recentUsersCount,
+      newJobs7d: recentJobsCount
+    }
   };
 }
 
