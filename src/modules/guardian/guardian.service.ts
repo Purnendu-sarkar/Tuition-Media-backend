@@ -167,7 +167,6 @@ async function getJobApplications(guardianId: string, jobId: string) {
       matchScore
     };
   });
-
   return applicationsWithScore;
 }
 
@@ -227,10 +226,98 @@ async function getAllJobs(guardianId: string) {
   }));
 }
 
+async function getSavedTutors(guardianId: string) {
+  const savedTutors = await prisma.savedTutor.findMany({
+    where: { guardianId },
+    include: {
+      tutor: {
+        select: {
+          id: true,
+          name: true,
+          image: true,
+          tutorProfile: {
+            select: {
+              bio: true,
+              hourlyRate: true,
+              location: true,
+              subjects: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return savedTutors.map(st => ({
+    id: st.id,
+    tutorId: st.tutorId,
+    tutor: st.tutor,
+    createdAt: st.createdAt,
+  }));
+}
+
+async function saveTutor(guardianId: string, tutorId: string) {
+  // Check if tutor exists
+  const tutor = await prisma.user.findFirst({
+    where: { id: tutorId, role: "TUTOR" },
+  });
+
+  if (!tutor) {
+    throw new Error("Tutor not found");
+  }
+
+  return await prisma.savedTutor.upsert({
+    where: {
+      guardianId_tutorId: {
+        guardianId,
+        tutorId,
+      },
+    },
+    update: {},
+    create: {
+      guardianId,
+      tutorId,
+    },
+  });
+}
+
+async function unsaveTutor(guardianId: string, tutorId: string) {
+  try {
+    return await prisma.savedTutor.delete({
+      where: {
+        guardianId_tutorId: {
+          guardianId,
+          tutorId,
+        },
+      },
+    });
+  } catch (err) {
+    // If already deleted, just ignore
+    return null;
+  }
+}
+
+async function checkIfSaved(guardianId: string, tutorId: string) {
+  const saved = await prisma.savedTutor.findUnique({
+    where: {
+      guardianId_tutorId: {
+        guardianId,
+        tutorId,
+      },
+    },
+  });
+  return !!saved;
+}
+
 export const guardianService = {
   getDashboardStats,
   createJob,
   getAllJobs,
   getJobApplications,
   updateApplicationStatus,
+  getSavedTutors,
+  saveTutor,
+  unsaveTutor,
+  checkIfSaved,
 };

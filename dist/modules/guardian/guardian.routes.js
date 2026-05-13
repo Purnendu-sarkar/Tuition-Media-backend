@@ -11,3 +11,7 @@ guardianRouter.get("/jobs", guardianController.getAllJobs);
 guardianRouter.post("/jobs", validateRequest(createJobSchema), guardianController.createJob);
 guardianRouter.get("/jobs/:jobId/applications", guardianController.getApplications);
 guardianRouter.patch("/applications/:applicationId/status", validateRequest(updateApplicationSchema), guardianController.updateApplication);
+guardianRouter.get("/saved", guardianController.getSavedTutors);
+guardianRouter.post("/saved/:tutorId", guardianController.saveTutor);
+guardianRouter.delete("/saved/:tutorId", guardianController.unsaveTutor);
+guardianRouter.get("/saved/:tutorId/check", guardianController.checkIfSaved);

@@ -195,10 +195,92 @@ async function getAllJobs(guardianId) {
         createdAt: job.createdAt,
     }));
 }
+async function getSavedTutors(guardianId) {
+    const savedTutors = await prisma.savedTutor.findMany({
+        where: { guardianId },
+        include: {
+            tutor: {
+                select: {
+                    id: true,
+                    name: true,
+                    image: true,
+                    tutorProfile: {
+                        select: {
+                            bio: true,
+                            hourlyRate: true,
+                            location: true,
+                            subjects: true,
+                        },
+                    },
+                },
+            },
+        },
+        orderBy: { createdAt: "desc" },
+    });
+    return savedTutors.map(st => ({
+        id: st.id,
+        tutorId: st.tutorId,
+        tutor: st.tutor,
+        createdAt: st.createdAt,
+    }));
+}
+async function saveTutor(guardianId, tutorId) {
+    // Check if tutor exists
+    const tutor = await prisma.user.findFirst({
+        where: { id: tutorId, role: "TUTOR" },
+    });
+    if (!tutor) {
+        throw new Error("Tutor not found");
+    }
+    return await prisma.savedTutor.upsert({
+        where: {
+            guardianId_tutorId: {
+                guardianId,
+                tutorId,
+            },
+        },
+        update: {},
+        create: {
+            guardianId,
+            tutorId,
+        },
+    });
+}
+async function unsaveTutor(guardianId, tutorId) {
+    try {
+        return await prisma.savedTutor.delete({
+            where: {
+                guardianId_tutorId: {
+                    guardianId,
+                    tutorId,
+                },
+            },
+        });
+    }
+    catch (err) {
+        // If already deleted, just ignore
+        return null;
+    }
+}
+async function checkIfSaved(guardianId, tutorId) {
+    const saved = await prisma.savedTutor.findUnique({
+        where: {
+            guardianId_tutorId: {
+                guardianId,
+                tutorId,
+            },
+        },
+    });
+    return !!saved;
+}
 export const guardianService = {
     getDashboardStats,
     createJob,
     getAllJobs,
     getJobApplications,
     updateApplicationStatus,
+    getSavedTutors,
+    saveTutor,
+    unsaveTutor,
+    checkIfSaved,
 };

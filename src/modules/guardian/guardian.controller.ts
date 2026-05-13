@@ -81,14 +81,61 @@ async function updateApplication(req: Request, res: Response, next: NextFunction
 async function getAllJobs(req: Request, res: Response, next: NextFunction) {
   try {
     const guardianId = req.user?.sub;
-    
-    if (!guardianId) {
-      return res.status(StatusCodes.UNAUTHORIZED).json({ message: "Unauthorized" });
-    }
+    if (!guardianId) return res.status(StatusCodes.UNAUTHORIZED).json({ message: "Unauthorized" });
 
     const jobs = await guardianService.getAllJobs(guardianId);
-    
     res.status(StatusCodes.OK).json(jobs);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function checkIfSaved(req: Request, res: Response, next: NextFunction) {
+  try {
+    const guardianId = req.user?.sub;
+    if (!guardianId) return res.status(StatusCodes.UNAUTHORIZED).json({ message: "Unauthorized" });
+
+    const tutorId = req.params.tutorId as string;
+    const isSaved = await guardianService.checkIfSaved(guardianId, tutorId);
+    res.status(StatusCodes.OK).json({ isSaved });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function getSavedTutors(req: Request, res: Response, next: NextFunction) {
+  try {
+    const guardianId = req.user?.sub;
+    if (!guardianId) return res.status(StatusCodes.UNAUTHORIZED).json({ message: "Unauthorized" });
+
+    const savedTutors = await guardianService.getSavedTutors(guardianId);
+    res.status(StatusCodes.OK).json(savedTutors);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function saveTutor(req: Request, res: Response, next: NextFunction) {
+  try {
+    const guardianId = req.user?.sub;
+    if (!guardianId) return res.status(StatusCodes.UNAUTHORIZED).json({ message: "Unauthorized" });
+
+    const tutorId = req.params.tutorId as string;
+    const saved = await guardianService.saveTutor(guardianId, tutorId);
+    res.status(StatusCodes.CREATED).json(saved);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function unsaveTutor(req: Request, res: Response, next: NextFunction) {
+  try {
+    const guardianId = req.user?.sub;
+    if (!guardianId) return res.status(StatusCodes.UNAUTHORIZED).json({ message: "Unauthorized" });
+
+    const tutorId = req.params.tutorId as string;
+    await guardianService.unsaveTutor(guardianId, tutorId);
+    res.status(StatusCodes.NO_CONTENT).send();
   } catch (error) {
     next(error);
   }
@@ -100,4 +147,8 @@ export const guardianController = {
   getAllJobs,
   getApplications,
   updateApplication,
+  getSavedTutors,
+  saveTutor,
+  unsaveTutor,
+  checkIfSaved,
 };
