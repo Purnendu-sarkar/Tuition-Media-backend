@@ -43,6 +43,9 @@ async function getJobById(jobId) {
                     image: true,
                 },
             },
+            _count: {
+                select: { applications: true },
+            },
         },
     });
     if (!job) {

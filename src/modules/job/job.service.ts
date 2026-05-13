@@ -51,6 +51,9 @@ async function getJobById(jobId: string) {
           image: true,
         },
       },
+      _count: {
+        select: { applications: true },
+      },
     },
   });
 
