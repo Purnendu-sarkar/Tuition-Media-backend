@@ -42,8 +42,34 @@ async function updateProfile(req: Request, res: Response, next: NextFunction) {
   }
 }
 
+async function getAvailability(req: Request, res: Response, next: NextFunction) {
+  try {
+    const tutorId = req.user?.sub;
+    if (!tutorId) return res.status(StatusCodes.UNAUTHORIZED).json({ message: "Unauthorized" });
+
+    const availability = await tutorService.getAvailability(tutorId);
+    res.status(StatusCodes.OK).json(availability);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function updateAvailability(req: Request, res: Response, next: NextFunction) {
+  try {
+    const tutorId = req.user?.sub;
+    if (!tutorId) return res.status(StatusCodes.UNAUTHORIZED).json({ message: "Unauthorized" });
+
+    const availability = await tutorService.updateAvailability(tutorId, req.body.availabilities);
+    res.status(StatusCodes.OK).json(availability);
+  } catch (error) {
+    next(error);
+  }
+}
+
 export const tutorController = {
   getDashboard,
   getProfile,
   updateProfile,
+  getAvailability,
+  updateAvailability,
 };

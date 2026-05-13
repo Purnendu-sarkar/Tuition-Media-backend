@@ -146,8 +146,33 @@ async function updateProfile(tutorId, data) {
     });
     return profile;
 }
+async function getAvailability(tutorId) {
+    return prisma.availability.findMany({
+        where: { tutorId },
+    });
+}
+async function updateAvailability(tutorId, availabilities) {
+    return prisma.$transaction(availabilities.map((avail) => prisma.availability.upsert({
+        where: {
+            tutorId_day: {
+                tutorId,
+                day: avail.day,
+            },
+        },
+        update: {
+            slots: avail.slots,
+        },
+        create: {
+            tutorId,
+            day: avail.day,
+            slots: avail.slots,
+        },
+    })));
+}
 export const tutorService = {
     getDashboardStats,
     getProfile,
     updateProfile,
+    getAvailability,
+    updateAvailability,
 };

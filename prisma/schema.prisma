@@ -42,6 +42,19 @@ model User {
   
   savedTutors      SavedTutor[]   @relation("GuardianSavedTutors")
   savedBy          SavedTutor[]   @relation("TutorSavedBy")
+  availabilities   Availability[]
+}
+
+model Availability {
+  id        String   @id @default(cuid())
+  tutorId   String
+  tutor     User     @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+  day       String   // e.g., "SATURDAY", "SUNDAY", etc.
+  slots     String[] // e.g., ["09:00", "10:00", "14:00"]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tutorId, day])
 }
 
 model TutorProfile {
